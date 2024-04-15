@@ -54,8 +54,8 @@ fun build(point: List<Int>, weight: Int, tourMap: MutableMap<Int, MutableList<Pa
     if(tourMap[point[0]] == null) tourMap[point[0]] = mutableListOf()
     if(tourMap[point[1]] == null) tourMap[point[1]] = mutableListOf()
 
-    tourMap[point[0]]!!.add(Pair(point[1], weight))
-    tourMap[point[1]]!!.add(Pair(point[0], weight))
+    tourMap[point[0]]?.add(Pair(point[1], weight))
+    tourMap[point[1]]?.add(Pair(point[0], weight))
 
     nodeSet.add(point[0])
     nodeSet.add(point[1])
