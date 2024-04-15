@@ -2,6 +2,7 @@ import java.util.*
 
 fun main(args: Array<String>) = with(Scanner(System.`in`)) {
     var starting = 0
+    val minEdgeWeight = mutableMapOf<Pair<Int, Int>, Int>()
     val tourMap = mutableMapOf<Int, MutableList<Pair<Int, Int>>>()
     // key : 여행상품 id, value : first - 가격 second - 목적지
     val tourItemMap = mutableMapOf<Int, Pair<Int, Int>>()
@@ -25,7 +26,18 @@ fun main(args: Array<String>) = with(Scanner(System.`in`)) {
         when (order[0].toInt()) {
             100 -> {
                 for (i in 3 .. (order.size - 3) step 3) {
-                    build(listOf(order[i].toInt(), order[i + 1].toInt()), order[i + 2].toInt(), tourMap, nodeSet)
+                    build(listOf(order[i].toInt(), order[i + 1].toInt()), order[i + 2].toInt(), minEdgeWeight, nodeSet)
+                }
+
+                minEdgeWeight.forEach {
+                    val firstNode = it.key.first
+                    val secondNode = it.key.second
+
+                    if (tourMap[firstNode] == null) tourMap[firstNode] = mutableListOf()
+                    if (tourMap[secondNode] == null) tourMap[secondNode] = mutableListOf()
+
+                    tourMap[firstNode]!!.add(Pair(secondNode, it.value))
+                    tourMap[secondNode]!!.add(Pair(firstNode, it.value))
                 }
             }
             200 -> {
@@ -52,12 +64,11 @@ fun main(args: Array<String>) = with(Scanner(System.`in`)) {
 
 // 이동 가능한 노드와 가중치를 저장한 map을 만든다.
 // 건설 명령
-fun build(point: List<Int>, weight: Int, tourMap: MutableMap<Int, MutableList<Pair<Int, Int>>>, nodeSet: MutableSet<Int>) {
-    if(tourMap[point[0]] == null) tourMap[point[0]] = mutableListOf()
-    if(tourMap[point[1]] == null) tourMap[point[1]] = mutableListOf()
+fun build(point: List<Int>, weight: Int, tourMap: MutableMap<Pair<Int, Int>, Int>, nodeSet: MutableSet<Int>) {
+    val first = Integer.min(point[0], point[1])
+    val second = Integer.max(point[0], point[1])
 
-    tourMap[point[0]]?.add(Pair(point[1], weight))
-    tourMap[point[1]]?.add(Pair(point[0], weight))
+    tourMap[Pair(first, second)] = Integer.min(tourMap[Pair(first, second)]?: Int.MAX_VALUE, weight)
 
     nodeSet.add(point[0])
     nodeSet.add(point[1])
@@ -146,7 +157,7 @@ fun findBestItem(starting: Int, tourMap: Map<Int, List<Pair<Int, Int>>>, tourIte
                         break
                     }
 
-                    if (maxEarning == null || (price - (nodeWeight[arrivePoint]?: Int.MAX_VALUE) >= (maxEarning?: Int.MAX_VALUE) )) {
+                    if (maxEarning == null || price - (nodeWeight[arrivePoint]?: Int.MAX_VALUE) >= (maxEarning?: Int.MAX_VALUE) ) {
                         val nextNodes = tourMap[arrivePoint] ?: listOf()
                         nextNodes.forEach {
                             priorityQueue.offer(Triple(arrivePoint, it.first, (nodeWeight[arrivePoint]?: Int.MAX_VALUE) + it.second))
