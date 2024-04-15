@@ -9,10 +9,12 @@ fun main(args: Array<String>) = with(Scanner(System.`in`)) {
     // 랜드 집합
     val nodeSet = mutableSetOf<Int>()
     val answer = mutableListOf<Int>()
+    val memoization = mutableMapOf<Pair<Int, Int>, Int>()
 
     // 출발지 변경
     fun changeStartingPoint(point: Int) {
         starting = point
+        memoization.clear()
     }
 
     val orders = nextLine().toInt()
@@ -33,7 +35,7 @@ fun main(args: Array<String>) = with(Scanner(System.`in`)) {
                 deleteItem(order[1].toInt(), tourItemIdSet)
             }
             400 -> {
-                val findId = findBestItem(starting, tourMap, tourItemMap, tourItemIdSet)
+                val findId = findBestItem(starting, tourMap, tourItemMap, tourItemIdSet, memoization)
                 answer.add(findId?: -1)
                 if (findId != null) {
                     tourItemIdSet.remove(findId)
@@ -74,7 +76,7 @@ fun deleteItem(id: Int, tourItemSet: MutableSet<Int>) {
     tourItemSet.remove(id)
 }
 
-fun findBestItem(starting: Int, tourMap: Map<Int, List<Pair<Int, Int>>>, tourItemMap: Map<Int, Pair<Int, Int>>, tourItemIdSet: Set<Int>): Int? {
+fun findBestItem(starting: Int, tourMap: Map<Int, List<Pair<Int, Int>>>, tourItemMap: Map<Int, Pair<Int, Int>>, tourItemIdSet: Set<Int>, memoization: MutableMap<Pair<Int, Int>, Int>): Int? {
     var maxEarning: Int? = null
     var findId: Int?= null
     tourItemIdSet.forEach { id ->
@@ -96,6 +98,17 @@ fun findBestItem(starting: Int, tourMap: Map<Int, List<Pair<Int, Int>>>, tourIte
                     findId = id
                 } else if ((maxEarning?: -1) == price && id < (findId ?: -1)) {
                     findId = id
+                }
+            } else if (memoization[Pair(starting, endPoint)] != null) {
+                val totalEarning = price - memoization[Pair(starting, endPoint)]!!
+
+                if (totalEarning >= 0) {
+                    if (maxEarning == null || totalEarning > maxEarning!!) {
+                        maxEarning = totalEarning
+                        findId = id
+                    } else if (totalEarning == maxEarning) {
+                        findId = if (Integer.min(id, findId?: -1) == -1) null else Integer.min(id, findId?: -1)
+                    }
                 }
             } else {
                 val startingNodeList = tourMap[starting]?: listOf()
@@ -119,6 +132,7 @@ fun findBestItem(starting: Int, tourMap: Map<Int, List<Pair<Int, Int>>>, tourIte
                     nodeWeight[arrivePoint] = minWeight
 
                     if (arrivePoint == endPoint) {
+                        memoization[Pair(starting, endPoint)] = nodeWeight[arrivePoint]?: Int.MAX_VALUE
                         val totalEarning = price - (nodeWeight[arrivePoint]?: Int.MAX_VALUE)
 
                         if (totalEarning >= 0) {
