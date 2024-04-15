@@ -78,64 +78,66 @@ fun findBestItem(starting: Int, tourMap: Map<Int, List<Pair<Int, Int>>>, tourIte
     var maxEarning: Int? = null
     var findId: Int?= null
     tourItemIdSet.forEach { id ->
-        val price = tourItemMap[id]!!.first
-        val endPoint = tourItemMap[id]!!.second
-        val nodeWeight = IntArray(nodeCnt) {
-            Int.MAX_VALUE
-        }
-        // 노드 간 중복 방문을 막기 위함
-        val visited = mutableMapOf<Pair<Int, Int>, Boolean>()
-        // 최단거리를 구하기 위한 우선순위 큐
-        val priorityQueue = PriorityQueue<Triple<Int, Int, Int>> { a, b ->
-            a.third - b.third
-        }
-        nodeWeight[starting] = 0
-
-        if (starting == endPoint) {
-            if ((maxEarning?: -1) < price) {
-                maxEarning = price
-                findId = id
-            } else if ((maxEarning?: -1) == price && id < (findId ?: -1)) {
-                findId = id
+        tourItemMap[id]?.let { tour ->
+            val price = tour.first
+            val endPoint = tour.second
+            val nodeWeight = IntArray(nodeCnt) {
+                Int.MAX_VALUE
             }
-        } else {
-            val startingNodeList = tourMap[starting]?: listOf()
-
-            startingNodeList.forEach {
-                priorityQueue.offer(Triple(starting, it.first, nodeWeight[starting] + it.second))
+            // 노드 간 중복 방문을 막기 위함
+            val visited = mutableMapOf<Pair<Int, Int>, Boolean>()
+            // 최단거리를 구하기 위한 우선순위 큐
+            val priorityQueue = PriorityQueue<Triple<Int, Int, Int>> { a, b ->
+                a.third - b.third
             }
+            nodeWeight[starting] = 0
 
-            while (priorityQueue.isNotEmpty()) {
-                val moveInfo = priorityQueue.poll()
-                val startPoint = moveInfo.first
-                val arrivePoint = moveInfo.second
-                val totalWeight = moveInfo.third
-                val nodes = mutableListOf(startPoint, arrivePoint)
-                nodes.sort()
+            if (starting == endPoint) {
+                if ((maxEarning?: -1) < price) {
+                    maxEarning = price
+                    findId = id
+                } else if ((maxEarning?: -1) == price && id < (findId ?: -1)) {
+                    findId = id
+                }
+            } else {
+                val startingNodeList = tourMap[starting]?: listOf()
 
-                if (visited[Pair(nodes[0], nodes[1])] == true) continue
-
-                visited[Pair(nodes[0], nodes[1])] = true
-                val minWeight = Integer.min(nodeWeight[arrivePoint], totalWeight)
-                nodeWeight[arrivePoint] = minWeight
-
-                if (arrivePoint == endPoint) {
-                    val totalEarning = price - nodeWeight[arrivePoint]
-
-                    if (totalEarning >= 0) {
-                        if (maxEarning == null || totalEarning > maxEarning!!) {
-                            maxEarning = totalEarning
-                            findId = id
-                        } else if (totalEarning == maxEarning) {
-                            findId = if (Integer.min(id, findId?: -1) == -1) null else Integer.min(id, findId?: -1)
-                        }
-                    }
-                    break
+                startingNodeList.forEach {
+                    priorityQueue.offer(Triple(starting, it.first, nodeWeight[starting] + it.second))
                 }
 
-                val nextNodes = tourMap[arrivePoint] ?: listOf()
-                nextNodes.forEach {
-                    priorityQueue.offer(Triple(arrivePoint, it.first, nodeWeight[arrivePoint] + it.second))
+                while (priorityQueue.isNotEmpty()) {
+                    val moveInfo = priorityQueue.poll()
+                    val startPoint = moveInfo.first
+                    val arrivePoint = moveInfo.second
+                    val totalWeight = moveInfo.third
+                    val nodes = mutableListOf(startPoint, arrivePoint)
+                    nodes.sort()
+
+                    if (visited[Pair(nodes[0], nodes[1])] == true) continue
+
+                    visited[Pair(nodes[0], nodes[1])] = true
+                    val minWeight = Integer.min(nodeWeight[arrivePoint], totalWeight)
+                    nodeWeight[arrivePoint] = minWeight
+
+                    if (arrivePoint == endPoint) {
+                        val totalEarning = price - nodeWeight[arrivePoint]
+
+                        if (totalEarning >= 0) {
+                            if (maxEarning == null || totalEarning > maxEarning!!) {
+                                maxEarning = totalEarning
+                                findId = id
+                            } else if (totalEarning == maxEarning) {
+                                findId = if (Integer.min(id, findId?: -1) == -1) null else Integer.min(id, findId?: -1)
+                            }
+                        }
+                        break
+                    }
+
+                    val nextNodes = tourMap[arrivePoint] ?: listOf()
+                    nextNodes.forEach {
+                        priorityQueue.offer(Triple(arrivePoint, it.first, nodeWeight[arrivePoint] + it.second))
+                    }
                 }
             }
         }
