@@ -145,10 +145,12 @@ fun findBestItem(starting: Int, tourMap: Map<Int, List<Pair<Int, Int>>>, tourIte
                         }
                         break
                     }
-
-                    val nextNodes = tourMap[arrivePoint] ?: listOf()
-                    nextNodes.forEach {
-                        priorityQueue.offer(Triple(arrivePoint, it.first, (nodeWeight[arrivePoint]?: Int.MAX_VALUE) + it.second))
+                    
+                    if (price - (nodeWeight[arrivePoint]?: Int.MAX_VALUE) >= (maxEarning?: Int.MAX_VALUE) ) {
+                        val nextNodes = tourMap[arrivePoint] ?: listOf()
+                        nextNodes.forEach {
+                            priorityQueue.offer(Triple(arrivePoint, it.first, (nodeWeight[arrivePoint]?: Int.MAX_VALUE) + it.second))
+                        }
                     }
                 }
             }
