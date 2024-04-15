@@ -33,7 +33,7 @@ fun main(args: Array<String>) = with(Scanner(System.`in`)) {
                 deleteItem(order[1].toInt(), tourItemIdSet)
             }
             400 -> {
-                val findId = findBestItem(starting, tourMap, tourItemMap, tourItemIdSet, nodeSet.size)
+                val findId = findBestItem(starting, tourMap, tourItemMap, tourItemIdSet)
                 answer.add(findId?: -1)
                 if (findId != null) {
                     tourItemIdSet.remove(findId)
@@ -74,16 +74,14 @@ fun deleteItem(id: Int, tourItemSet: MutableSet<Int>) {
     tourItemSet.remove(id)
 }
 
-fun findBestItem(starting: Int, tourMap: Map<Int, List<Pair<Int, Int>>>, tourItemMap: Map<Int, Pair<Int, Int>>, tourItemIdSet: Set<Int>, nodeCnt: Int): Int? {
+fun findBestItem(starting: Int, tourMap: Map<Int, List<Pair<Int, Int>>>, tourItemMap: Map<Int, Pair<Int, Int>>, tourItemIdSet: Set<Int>): Int? {
     var maxEarning: Int? = null
     var findId: Int?= null
     tourItemIdSet.forEach { id ->
         tourItemMap[id]?.let { tour ->
             val price = tour.first
             val endPoint = tour.second
-            val nodeWeight = IntArray(nodeCnt) {
-                Int.MAX_VALUE
-            }
+            val nodeWeight = mutableMapOf<Int, Int>()
             // 노드 간 중복 방문을 막기 위함
             val visited = mutableMapOf<Pair<Int, Int>, Boolean>()
             // 최단거리를 구하기 위한 우선순위 큐
@@ -103,7 +101,7 @@ fun findBestItem(starting: Int, tourMap: Map<Int, List<Pair<Int, Int>>>, tourIte
                 val startingNodeList = tourMap[starting]?: listOf()
 
                 startingNodeList.forEach {
-                    priorityQueue.offer(Triple(starting, it.first, nodeWeight[starting] + it.second))
+                    priorityQueue.offer(Triple(starting, it.first, (nodeWeight[starting]?: Int.MAX_VALUE) + it.second))
                 }
 
                 while (priorityQueue.isNotEmpty()) {
@@ -117,11 +115,11 @@ fun findBestItem(starting: Int, tourMap: Map<Int, List<Pair<Int, Int>>>, tourIte
                     if (visited[Pair(nodes[0], nodes[1])] == true) continue
 
                     visited[Pair(nodes[0], nodes[1])] = true
-                    val minWeight = Integer.min(nodeWeight[arrivePoint], totalWeight)
+                    val minWeight = Integer.min(nodeWeight[arrivePoint]?: Int.MAX_VALUE, totalWeight)
                     nodeWeight[arrivePoint] = minWeight
 
                     if (arrivePoint == endPoint) {
-                        val totalEarning = price - nodeWeight[arrivePoint]
+                        val totalEarning = price - (nodeWeight[arrivePoint]?: Int.MAX_VALUE)
 
                         if (totalEarning >= 0) {
                             if (maxEarning == null || totalEarning > maxEarning!!) {
@@ -136,7 +134,7 @@ fun findBestItem(starting: Int, tourMap: Map<Int, List<Pair<Int, Int>>>, tourIte
 
                     val nextNodes = tourMap[arrivePoint] ?: listOf()
                     nextNodes.forEach {
-                        priorityQueue.offer(Triple(arrivePoint, it.first, nodeWeight[arrivePoint] + it.second))
+                        priorityQueue.offer(Triple(arrivePoint, it.first, (nodeWeight[arrivePoint]?: Int.MAX_VALUE) + it.second))
                     }
                 }
             }
